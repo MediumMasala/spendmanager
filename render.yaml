@@ -6,8 +6,9 @@ services:
     runtime: node
     region: singapore  # Closest to India
     plan: starter  # $7/month, upgrade as needed
-    buildCommand: cd backend && npm ci && npx prisma generate && npm run build
-    startCommand: cd backend && npm run db:migrate:prod && npm start
+    rootDir: backend
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run db:migrate:prod && npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
