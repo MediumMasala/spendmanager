@@ -83,10 +83,12 @@ export function startScheduler(): void {
         by: ['userId'],
         where: { parseStatus: 'PENDING' },
         _count: { id: true },
+        orderBy: { userId: 'asc' },
         take: 50,
       });
 
-      for (const { userId } of usersWithPending) {
+      for (const group of usersWithPending) {
+        const userId = group.userId;
         try {
           const result = await eventService.parsePendingEvents(userId, 20);
           console.log(

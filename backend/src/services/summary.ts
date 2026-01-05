@@ -1,5 +1,6 @@
 import { prisma } from '../db.js';
 import { Decimal } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 
 interface WeekRange {
   start: Date;
@@ -179,17 +180,17 @@ export class SummaryService {
         userId,
         weekStart: range.start,
         weekEnd: range.end,
-        totalsJson: summary.totals,
-        topMerchantsJson: summary.topMerchants,
-        categoriesJson: summary.categories,
-        subscriptionsJson: summary.subscriptions,
+        totalsJson: summary.totals as unknown as Prisma.InputJsonValue,
+        topMerchantsJson: summary.topMerchants as unknown as Prisma.InputJsonValue,
+        categoriesJson: summary.categories as unknown as Prisma.InputJsonValue,
+        subscriptionsJson: summary.subscriptions as unknown as Prisma.InputJsonValue,
         transactionCount: transactions.length,
       },
       update: {
-        totalsJson: summary.totals,
-        topMerchantsJson: summary.topMerchants,
-        categoriesJson: summary.categories,
-        subscriptionsJson: summary.subscriptions,
+        totalsJson: summary.totals as unknown as Prisma.InputJsonValue,
+        topMerchantsJson: summary.topMerchants as unknown as Prisma.InputJsonValue,
+        categoriesJson: summary.categories as unknown as Prisma.InputJsonValue,
+        subscriptionsJson: summary.subscriptions as unknown as Prisma.InputJsonValue,
         transactionCount: transactions.length,
       },
     });

@@ -1,6 +1,7 @@
 {
   "name": "spendmanager-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend service for SpendManager - AI-powered money tracking",
   "main": "dist/server.js",
   "scripts": {
