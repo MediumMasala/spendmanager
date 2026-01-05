@@ -1,0 +1,74 @@
+[
+  {
+    "id": "eval_001",
+    "text": "Paid Rs.250.00 to Swiggy via UPI. UPI Ref: 4023XXXX5678. Debited from A/c XXXX1234.",
+    "app_source": "gpay",
+    "posted_at": "2024-01-15T12:30:00+05:30"
+  },
+  {
+    "id": "eval_002",
+    "text": "Rs 1,500 paid to Amazon for order #XXXXXXX789. Transaction ID: TXN98XXXX321.",
+    "app_source": "phonepe",
+    "posted_at": "2024-01-15T14:45:00+05:30"
+  },
+  {
+    "id": "eval_003",
+    "text": "INR 5,000.00 debited from A/c XXXX1234 on 15-01-24 for NEFT to John Doe. Ref 1234XXXX9012.",
+    "app_source": "hdfc",
+    "posted_at": "2024-01-15T16:00:00+05:30"
+  },
+  {
+    "id": "eval_004",
+    "text": "Rs.25,000 credited to your A/c XX5678 on 15-01-24 by NEFT from Employer Corp. Ref: ICIC24XXXX3456.",
+    "app_source": "icici",
+    "posted_at": "2024-01-15T10:00:00+05:30"
+  },
+  {
+    "id": "eval_005",
+    "text": "Money Added! Rs.500 added to Paytm Wallet from HDFC Bank XX1234. Enjoy shopping!",
+    "app_source": "paytm",
+    "posted_at": "2024-01-15T09:15:00+05:30"
+  },
+  {
+    "id": "eval_006",
+    "text": "Received Rs.1,000 from ra***@okaxis. UPI Ref: 4023XXXX5432.",
+    "app_source": "gpay",
+    "posted_at": "2024-01-16T11:30:00+05:30"
+  },
+  {
+    "id": "eval_007",
+    "text": "Your OTP for transaction is XXXXXX. Valid for 5 minutes. Do not share with anyone.",
+    "app_source": "sbi",
+    "posted_at": "2024-01-16T12:00:00+05:30"
+  },
+  {
+    "id": "eval_008",
+    "text": "Payment of Rs.15,432 to HDFC Credit Card successful. Cashback of Rs.50 credited!",
+    "app_source": "cred",
+    "posted_at": "2024-01-16T18:00:00+05:30"
+  },
+  {
+    "id": "eval_009",
+    "text": "Paid Rs.99 to Netflix via UPI Autopay. Subscription renewed successfully.",
+    "app_source": "phonepe",
+    "posted_at": "2024-01-17T00:05:00+05:30"
+  },
+  {
+    "id": "eval_010",
+    "text": "Your AXIS Bank A/c XX9876 is debited with Rs.2,500 for ATM withdrawal at MG Road ATM.",
+    "app_source": "axis",
+    "posted_at": "2024-01-17T15:30:00+05:30"
+  },
+  {
+    "id": "eval_011",
+    "text": "Limited time offer! Get 50% cashback on your next payment. T&C apply. Offer ends soon!",
+    "app_source": "gpay",
+    "posted_at": "2024-01-17T10:00:00+05:30"
+  },
+  {
+    "id": "eval_012",
+    "text": "Alert: Your HDFC Credit Card ending 4567 was used for Rs.3,299 at Flipkart on 17-01-24.",
+    "app_source": "hdfc",
+    "posted_at": "2024-01-17T20:15:00+05:30"
+  }
+]

@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Phone stored hashed for indexing, plain E.164 only for WhatsApp sends
+  phoneHash       String    @unique @map("phone_hash")
+  whatsappE164    String?   @map("whatsapp_e164")
+  whatsappOptInAt DateTime? @map("whatsapp_opt_in_at")
+
+  country         String    @default("IN")
+  timezone        String    @default("Asia/Kolkata")
+
+  // Soft delete
+  deletedAt       DateTime? @map("deleted_at")
+
+  // Relations
+  devices         Device[]
+  consent         Consent?
+  events          Event[]
+  transactions    Transaction[]
+  weeklySummaries WeeklySummary[]
+  whatsappLogs    WhatsappSendLog[]
+  otpRequests     OtpRequest[]
+
+  @@map("users")
+}
+
+model Device {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  platform    String   @default("android")
+  deviceToken String?  @map("device_token")
+  appVersion  String?  @map("app_version")
+  osVersion   String?  @map("os_version")
+  createdAt   DateTime @default(now()) @map("created_at")
+  lastSeenAt  DateTime @default(now()) @map("last_seen_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events      Event[]
+
+  @@map("devices")
+}
+
+model Consent {
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+
+  // Privacy toggles
+  cloudAiEnabled   Boolean  @default(false) @map("cloud_ai_enabled")
+  uploadRawEnabled Boolean  @default(false) @map("upload_raw_enabled")
+  whatsappEnabled  Boolean  @default(false) @map("whatsapp_enabled")
+
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consents")
+}
+
+model OtpRequest {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  phoneHash String   @map("phone_hash")
+  otpHash   String   @map("otp_hash")
+  expiresAt DateTime @map("expires_at")
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([phoneHash, expiresAt])
+  @@map("otp_requests")
+}
+
+model Event {
+  id            String       @id @default(uuid())
+  userId        String       @map("user_id")
+  deviceId      String       @map("device_id")
+
+  appSource     String       @map("app_source") // gpay, phonepe, paytm, hdfc, etc.
+  postedAt      DateTime     @map("posted_at")
+
+  // Privacy: redacted text always stored, raw only if user opted in
+  textRedacted  String       @map("text_redacted")
+  textRaw       String?      @map("text_raw")
+  textHash      String       @map("text_hash") // SHA256 for dedup/cache
+
+  locale        String       @default("en-IN")
+  timezone      String       @default("Asia/Kolkata")
+
+  // Parse status
+  parseStatus   ParseStatus  @default(PENDING) @map("parse_status")
+  parseConfidence Float?     @map("parse_confidence")
+  parseError    String?      @map("parse_error")
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device        Device       @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  transaction   Transaction?
+
+  @@index([userId, createdAt])
+  @@index([textHash])
+  @@index([parseStatus])
+  @@map("events")
+}
+
+enum ParseStatus {
+  PENDING
+  PARSED
+  FAILED
+  SKIPPED // Not a transaction
+}
+
+model Transaction {
+  id             String           @id @default(uuid())
+  userId         String           @map("user_id")
+  eventId        String           @unique @map("event_id")
+
+  occurredAt     DateTime         @map("occurred_at")
+  amount         Decimal          @db.Decimal(15, 2)
+  currency       String           @default("INR")
+  direction      TransactionDir
+
+  instrument     String?          // UPI, CARD, NEFT, IMPS, WALLET
+  merchant       String?
+  payee          String?
+  bankHint       String?          @map("bank_hint")
+  refId          String?          @map("ref_id")
+
+  category       String?
+  categorySource CategorySource?  @map("category_source")
+
+  // For debugging (only if upload_raw enabled)
+  rawTokens      String?          @map("raw_tokens")
+
+  confidence     Float            @default(0)
+
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event          Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([userId, category])
+  @@map("transactions")
+}
+
+enum TransactionDir {
+  DEBIT
+  CREDIT
+}
+
+enum CategorySource {
+  RULE
+  LLM
+  USER
+}
+
+model WeeklySummary {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+
+  weekStart       DateTime @map("week_start")
+  weekEnd         DateTime @map("week_end")
+
+  // JSON aggregates
+  totalsJson      Json     @map("totals_json")
+  topMerchantsJson Json    @map("top_merchants_json")
+  categoriesJson  Json     @map("categories_json")
+  subscriptionsJson Json?  @map("subscriptions_json")
+
+  transactionCount Int     @map("transaction_count")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  whatsappLog     WhatsappSendLog?
+
+  @@unique([userId, weekStart])
+  @@map("weekly_summaries")
+}
+
+model WhatsappSendLog {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  summaryId       String?       @unique @map("summary_id")
+
+  templateName    String        @map("template_name")
+  payloadJson     Json          @map("payload_json")
+
+  status          WhatsappStatus @default(PENDING)
+  waMessageId     String?       @map("wa_message_id")
+  errorMessage    String?       @map("error_message")
+
+  createdAt       DateTime      @default(now()) @map("created_at")
+  sentAt          DateTime?     @map("sent_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  summary         WeeklySummary? @relation(fields: [summaryId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("whatsapp_send_logs")
+}
+
+enum WhatsappStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+// Cache for LLM parse results (keyed by text hash)
+model ParseCache {
+  id          String   @id @default(uuid())
+  textHash    String   @unique @map("text_hash")
+  resultJson  Json     @map("result_json")
+  provider    String   // openai, anthropic, heuristic
+  createdAt   DateTime @default(now()) @map("created_at")
+  hitCount    Int      @default(0) @map("hit_count")
+  lastHitAt   DateTime @default(now()) @map("last_hit_at")
+
+  @@map("parse_cache")
+}
+
+// Token usage tracking for cost control
+model TokenUsage {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  provider    String
+  model       String
+  operation   String   // parse, categorize
+  inputTokens Int      @map("input_tokens")
+  outputTokens Int     @map("output_tokens")
+  costUsd     Decimal? @db.Decimal(10, 6) @map("cost_usd")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("token_usage")
+}

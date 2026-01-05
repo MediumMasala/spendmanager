@@ -1,0 +1,99 @@
+[
+  {
+    "id": "eval_001",
+    "isTransaction": true,
+    "amount": 250.00,
+    "direction": "DEBIT",
+    "merchant": "Swiggy",
+    "instrument": "UPI",
+    "category": "Food & Dining"
+  },
+  {
+    "id": "eval_002",
+    "isTransaction": true,
+    "amount": 1500.00,
+    "direction": "DEBIT",
+    "merchant": "Amazon",
+    "instrument": "UPI",
+    "category": "Shopping"
+  },
+  {
+    "id": "eval_003",
+    "isTransaction": true,
+    "amount": 5000.00,
+    "direction": "DEBIT",
+    "payee": "John Doe",
+    "instrument": "NEFT",
+    "category": "Transfer"
+  },
+  {
+    "id": "eval_004",
+    "isTransaction": true,
+    "amount": 25000.00,
+    "direction": "CREDIT",
+    "payee": "Employer Corp",
+    "instrument": "NEFT",
+    "category": "Salary"
+  },
+  {
+    "id": "eval_005",
+    "isTransaction": true,
+    "amount": 500.00,
+    "direction": "CREDIT",
+    "merchant": "Paytm",
+    "instrument": "WALLET",
+    "category": "Transfer"
+  },
+  {
+    "id": "eval_006",
+    "isTransaction": true,
+    "amount": 1000.00,
+    "direction": "CREDIT",
+    "instrument": "UPI",
+    "category": "Transfer"
+  },
+  {
+    "id": "eval_007",
+    "isTransaction": false,
+    "reason": "OTP message, not a transaction"
+  },
+  {
+    "id": "eval_008",
+    "isTransaction": true,
+    "amount": 15432.00,
+    "direction": "DEBIT",
+    "merchant": "HDFC Credit Card",
+    "category": "EMI/Loan"
+  },
+  {
+    "id": "eval_009",
+    "isTransaction": true,
+    "amount": 99.00,
+    "direction": "DEBIT",
+    "merchant": "Netflix",
+    "instrument": "UPI",
+    "category": "Entertainment"
+  },
+  {
+    "id": "eval_010",
+    "isTransaction": true,
+    "amount": 2500.00,
+    "direction": "DEBIT",
+    "instrument": "CASH",
+    "category": "Other"
+  },
+  {
+    "id": "eval_011",
+    "isTransaction": false,
+    "reason": "Promotional message, not a transaction"
+  },
+  {
+    "id": "eval_012",
+    "isTransaction": true,
+    "amount": 3299.00,
+    "direction": "DEBIT",
+    "merchant": "Flipkart",
+    "instrument": "CARD",
+    "category": "Shopping"
+  }
+]

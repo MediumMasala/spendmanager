@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.js.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Android
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+android-app/.cxx/
+*.apk
+*.aab
+
+# Backend
+backend/coverage/
+backend/.nyc_output/
+
+# Database
+*.db
+*.sqlite
+
+# Secrets (never commit)
+*.pem
+*.key
+secrets/
