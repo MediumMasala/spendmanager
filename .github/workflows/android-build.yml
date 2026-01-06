@@ -20,9 +20,21 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android-app/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./android-app/gradlew
@@ -30,12 +42,12 @@ jobs:
       - name: Build Debug APK (Play flavor)
         run: |
           cd android-app
-          ./gradlew assemblePlayDebug
+          ./gradlew assemblePlayDebug --no-daemon --stacktrace
 
       - name: Build Debug APK (Sideload flavor)
         run: |
           cd android-app
-          ./gradlew assembleSideloadDebug
+          ./gradlew assembleSideloadDebug --no-daemon
 
       - name: Upload Play Debug APK
         uses: actions/upload-artifact@v4
