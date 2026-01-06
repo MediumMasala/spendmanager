@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+    <!-- Dollar sign / Rupee symbol simplified -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,35h20v6h-14v8h12v6h-12v10h14v6h-20z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,30h12v4h-12z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,74h12v4h-12z"/>
+</vector>
