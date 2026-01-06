@@ -3,6 +3,9 @@
 *.ap_
 *.aab
 
+# Keep gradle wrapper jar
+!gradle/wrapper/gradle-wrapper.jar
+
 # Files for the ART/Dalvik VM
 *.dex
 
