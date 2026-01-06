@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.spendmanager.app.data.model.AppSource
 import com.spendmanager.app.data.model.DeviceInfo
 import com.spendmanager.app.data.model.EventQueueItem
@@ -19,8 +20,9 @@ import com.spendmanager.app.data.model.WeeklySummary
         AppSource::class
     ],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun eventQueueDao(): EventQueueDao
     abstract fun transactionDao(): TransactionDao
