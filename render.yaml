@@ -7,7 +7,7 @@ services:
     region: singapore  # Closest to India
     plan: starter  # $7/month, upgrade as needed
     rootDir: backend
-    buildCommand: npm ci && npx prisma generate && npm run build
+    buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run db:migrate:prod && npm start
     healthCheckPath: /health
     envVars:
