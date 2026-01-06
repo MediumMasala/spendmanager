@@ -1,19 +1,25 @@
 package com.spendmanager.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.spendmanager.app.data.model.Transaction
 import com.spendmanager.app.data.model.TransactionDirection
+import com.spendmanager.app.ui.theme.*
 import com.spendmanager.app.ui.viewmodel.TransactionsViewModel
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -27,41 +33,77 @@ fun TransactionsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
-    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    val timeFormat = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val dateFormat = remember { SimpleDateFormat("EEEE, d MMMM", Locale.getDefault()) }
+    val timeFormat = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
 
     Scaffold(
+        containerColor = White,
         topBar = {
             TopAppBar(
-                title = { Text("Transactions") },
+                title = {
+                    Text(
+                        "Transactions",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Outlined.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Charcoal
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = White,
+                    titleContentColor = Charcoal
+                )
             )
         }
     ) { padding ->
         if (uiState.transactions.isEmpty()) {
+            // Empty state
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    .background(White),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(32.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Receipt,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.outline
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(OffWhite),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Receipt,
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = CharcoalMuted
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     Text(
                         text = "No transactions yet",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Charcoal
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Your transactions will appear here",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = CharcoalMuted
                     )
                 }
             }
@@ -69,8 +111,9 @@ fun TransactionsScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
+                    .padding(padding)
+                    .background(White),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Group transactions by date
@@ -83,8 +126,8 @@ fun TransactionsScreen(
                         Text(
                             text = date,
                             style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            color = CharcoalMuted,
+                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                         )
                     }
 
@@ -97,17 +140,23 @@ fun TransactionsScreen(
                     }
                 }
 
-                // Load more indicator
+                // Load more
                 if (uiState.hasMore && !uiState.isLoading) {
                     item {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(vertical = 16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            TextButton(onClick = { viewModel.loadMore() }) {
-                                Text("Load More")
+                            TextButton(
+                                onClick = { viewModel.loadMore() }
+                            ) {
+                                Text(
+                                    "Load more",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = CharcoalMuted
+                                )
                             }
                         }
                     }
@@ -118,12 +167,21 @@ fun TransactionsScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = Charcoal
+                            )
                         }
                     }
+                }
+
+                // Bottom spacing
+                item {
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -136,8 +194,13 @@ private fun TransactionDetailItem(
     currencyFormat: NumberFormat,
     timeFormat: SimpleDateFormat
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
+    val isDebit = transaction.direction == TransactionDirection.DEBIT
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = White,
+        border = BorderStroke(1.dp, Gray200)
     ) {
         Row(
             modifier = Modifier
@@ -145,89 +208,85 @@ private fun TransactionDetailItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = if (transaction.direction == TransactionDirection.DEBIT) {
-                    MaterialTheme.colorScheme.errorContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
-                modifier = Modifier.size(44.dp)
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(if (isDebit) AccentRedLight else AccentGreenLight),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = if (transaction.direction == TransactionDirection.DEBIT) {
-                            Icons.Default.ArrowUpward
-                        } else {
-                            Icons.Default.ArrowDownward
-                        },
-                        contentDescription = null,
-                        tint = if (transaction.direction == TransactionDirection.DEBIT) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
-                    )
-                }
+                Icon(
+                    imageVector = if (isDebit) Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward,
+                    contentDescription = null,
+                    tint = if (isDebit) AccentRed else AccentGreen,
+                    modifier = Modifier.size(22.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
+            // Details
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.merchant ?: transaction.payee ?: "Unknown",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Charcoal
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     transaction.category?.let { category ->
                         Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.secondaryContainer
+                            shape = RoundedCornerShape(4.dp),
+                            color = OffWhite
                         ) {
                             Text(
                                 text = category,
                                 style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                color = CharcoalMuted,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     Text(
                         text = transaction.appSource,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
+                        color = Gray500
                     )
                 }
 
                 transaction.instrument?.let { instrument ->
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = instrument,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Gray500
                     )
                 }
             }
 
+            // Amount and time
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "${if (transaction.direction == TransactionDirection.DEBIT) "-" else "+"}${currencyFormat.format(transaction.amount)}",
+                    text = "${if (isDebit) "-" else "+"}${currencyFormat.format(transaction.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (transaction.direction == TransactionDirection.DEBIT) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
+                    color = if (isDebit) AccentRed else AccentGreen
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
                     text = timeFormat.format(Date(transaction.occurredAt)),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
+                    color = Gray500
                 )
             }
         }

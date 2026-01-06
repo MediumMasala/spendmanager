@@ -1,19 +1,24 @@
 package com.spendmanager.app.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.spendmanager.app.ui.theme.*
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
@@ -24,24 +29,24 @@ data class OnboardingPage(
 
 private val onboardingPages = listOf(
     OnboardingPage(
-        icon = Icons.Default.AccountBalance,
-        title = "Track Your Spending",
+        icon = Icons.Outlined.AccountBalance,
+        title = "Track Your Money",
         description = "Automatically capture transactions from UPI apps, bank notifications, and payment wallets."
     ),
     OnboardingPage(
-        icon = Icons.Default.Lock,
+        icon = Icons.Outlined.Lock,
         title = "Privacy First",
-        description = "Your data stays on device by default. Enable cloud features only when you choose. All sensitive info is redacted."
+        description = "Your data stays on device by default. Enable cloud features only when you choose."
     ),
     OnboardingPage(
-        icon = Icons.Default.Analytics,
-        title = "AI-Powered Insights",
-        description = "Get smart categorization and weekly summaries delivered to WhatsApp. See where your money goes."
+        icon = Icons.Outlined.Insights,
+        title = "Smart Insights",
+        description = "Get AI-powered categorization and weekly summaries delivered to WhatsApp."
     ),
     OnboardingPage(
-        icon = Icons.Default.Notifications,
-        title = "Silent Operation",
-        description = "No annoying notifications. The app works quietly in the background, reading your payment notifications."
+        icon = Icons.Outlined.NotificationsNone,
+        title = "Silent & Seamless",
+        description = "No annoying notifications. The app works quietly in the background."
     )
 )
 
@@ -53,14 +58,33 @@ fun OnboardingScreen(
     val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
     val coroutineScope = rememberCoroutineScope()
 
-    Scaffold { padding ->
+    Scaffold(
+        containerColor = White
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .background(White),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Skip button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = onComplete) {
+                    Text(
+                        "Skip",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = CharcoalMuted
+                    )
+                }
+            }
+
+            // Pager
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
@@ -72,50 +96,32 @@ fun OnboardingScreen(
 
             // Page indicators
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(24.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 repeat(onboardingPages.size) { index ->
-                    val color = if (pagerState.currentPage == index) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.outline
-                    }
                     Box(
                         modifier = Modifier
-                            .padding(4.dp)
-                            .size(8.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            shape = MaterialTheme.shapes.small,
-                            color = color
-                        ) {}
-                    }
+                            .padding(horizontal = 4.dp)
+                            .size(
+                                width = if (pagerState.currentPage == index) 24.dp else 8.dp,
+                                height = 8.dp
+                            )
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(
+                                if (pagerState.currentPage == index) Charcoal else Gray300
+                            )
+                    )
                 }
             }
 
-            // Buttons
-            Row(
+            // Bottom buttons
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 40.dp)
             ) {
-                if (pagerState.currentPage > 0) {
-                    TextButton(
-                        onClick = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                        }
-                    ) {
-                        Text("Back")
-                    }
-                } else {
-                    Spacer(modifier = Modifier.width(64.dp))
-                }
-
                 Button(
                     onClick = {
                         if (pagerState.currentPage == onboardingPages.size - 1) {
@@ -125,15 +131,43 @@ fun OnboardingScreen(
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
                         }
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Charcoal,
+                        contentColor = White
+                    )
                 ) {
                     Text(
                         if (pagerState.currentPage == onboardingPages.size - 1) {
                             "Get Started"
                         } else {
-                            "Next"
-                        }
+                            "Continue"
+                        },
+                        style = MaterialTheme.typography.bodyLarge
                     )
+                }
+
+                if (pagerState.currentPage > 0) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    TextButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Back",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = CharcoalMuted
+                        )
+                    }
                 }
             }
         }
@@ -145,23 +179,33 @@ private fun OnboardingPageContent(page: OnboardingPage) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = page.icon,
-            contentDescription = null,
-            modifier = Modifier.size(120.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
+        // Icon container
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(OffWhite),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = page.icon,
+                contentDescription = null,
+                modifier = Modifier.size(56.dp),
+                tint = Charcoal
+            )
+        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(48.dp))
 
         Text(
             text = page.title,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            style = MaterialTheme.typography.headlineLarge,
+            textAlign = TextAlign.Center,
+            color = Charcoal
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -170,7 +214,8 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             text = page.description,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = CharcoalMuted,
+            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
         )
     }
 }

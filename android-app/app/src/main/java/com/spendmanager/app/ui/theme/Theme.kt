@@ -1,112 +1,123 @@
 package com.spendmanager.app.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Light theme colors
+// Clean aesthetic white color scheme
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF1565C0),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFD1E4FF),
-    onPrimaryContainer = Color(0xFF001D36),
+    // Primary - Charcoal for main actions
+    primary = Charcoal,
+    onPrimary = White,
+    primaryContainer = Gray100,
+    onPrimaryContainer = Charcoal,
 
-    secondary = Color(0xFF535F70),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFD7E3F7),
-    onSecondaryContainer = Color(0xFF101C2B),
+    // Secondary - Muted tones
+    secondary = CharcoalMuted,
+    onSecondary = White,
+    secondaryContainer = Gray200,
+    onSecondaryContainer = Charcoal,
 
-    tertiary = Color(0xFF6B5778),
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFF2DAFF),
-    onTertiaryContainer = Color(0xFF251431),
+    // Tertiary - Accent blue
+    tertiary = AccentBlue,
+    onTertiary = White,
+    tertiaryContainer = AccentBlueLight,
+    onTertiaryContainer = AccentBlue,
 
-    error = Color(0xFFBA1A1A),
-    errorContainer = Color(0xFFFFDAD6),
-    onError = Color.White,
-    onErrorContainer = Color(0xFF410002),
+    // Error - Subtle red
+    error = AccentRed,
+    errorContainer = AccentRedLight,
+    onError = White,
+    onErrorContainer = AccentRed,
 
-    background = Color(0xFFFDFCFF),
-    onBackground = Color(0xFF1A1C1E),
-    surface = Color(0xFFFDFCFF),
-    onSurface = Color(0xFF1A1C1E),
+    // Background - Pure white
+    background = White,
+    onBackground = Charcoal,
 
-    surfaceVariant = Color(0xFFDFE2EB),
-    onSurfaceVariant = Color(0xFF43474E),
-    outline = Color(0xFF73777F),
-    outlineVariant = Color(0xFFC3C6CF),
+    // Surface - Clean whites
+    surface = White,
+    onSurface = Charcoal,
+    surfaceVariant = OffWhite,
+    onSurfaceVariant = CharcoalMuted,
+
+    // Outline - Subtle borders
+    outline = Gray300,
+    outlineVariant = Gray200,
+
+    // Inverse
+    inverseSurface = Charcoal,
+    inverseOnSurface = White,
+    inversePrimary = Gray400,
+
+    // Surface tones
+    surfaceTint = Charcoal,
 )
 
-// Dark theme colors
+// Dark theme (keeping for system dark mode support)
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF9ECAFF),
-    onPrimary = Color(0xFF003258),
-    primaryContainer = Color(0xFF00497D),
-    onPrimaryContainer = Color(0xFFD1E4FF),
+    primary = White,
+    onPrimary = Charcoal,
+    primaryContainer = CharcoalLight,
+    onPrimaryContainer = White,
 
-    secondary = Color(0xFFBBC7DB),
-    onSecondary = Color(0xFF253140),
-    secondaryContainer = Color(0xFF3B4858),
-    onSecondaryContainer = Color(0xFFD7E3F7),
+    secondary = Gray400,
+    onSecondary = Charcoal,
+    secondaryContainer = Gray800,
+    onSecondaryContainer = Gray200,
 
-    tertiary = Color(0xFFD6BEE4),
-    onTertiary = Color(0xFF3B2948),
-    tertiaryContainer = Color(0xFF523F5F),
-    onTertiaryContainer = Color(0xFFF2DAFF),
+    tertiary = AccentBlueLight,
+    onTertiary = Charcoal,
+    tertiaryContainer = AccentBlue,
+    onTertiaryContainer = White,
 
     error = Color(0xFFFFB4AB),
     errorContainer = Color(0xFF93000A),
     onError = Color(0xFF690005),
     onErrorContainer = Color(0xFFFFDAD6),
 
-    background = Color(0xFF1A1C1E),
-    onBackground = Color(0xFFE2E2E6),
-    surface = Color(0xFF1A1C1E),
-    onSurface = Color(0xFFE2E2E6),
+    background = Color(0xFF121212),
+    onBackground = White,
+    surface = Color(0xFF121212),
+    onSurface = White,
+    surfaceVariant = Color(0xFF1E1E1E),
+    onSurfaceVariant = Gray400,
 
-    surfaceVariant = Color(0xFF43474E),
-    onSurfaceVariant = Color(0xFFC3C6CF),
-    outline = Color(0xFF8D9199),
-    outlineVariant = Color(0xFF43474E),
+    outline = Gray600,
+    outlineVariant = Gray700,
+
+    inverseSurface = White,
+    inverseOnSurface = Charcoal,
+    inversePrimary = Charcoal,
 )
 
 @Composable
 fun SpendManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    // Disable dynamic color for consistent aesthetic
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            // White status bar for light theme
+            window.statusBarColor = if (darkTheme) Color(0xFF121212).toArgb() else White.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = AppTypography,
         content = content
     )
 }
-
-val Typography = Typography()

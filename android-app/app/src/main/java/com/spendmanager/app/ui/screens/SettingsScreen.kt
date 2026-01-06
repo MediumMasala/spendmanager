@@ -1,19 +1,26 @@
 package com.spendmanager.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.spendmanager.app.service.TransactionNotificationListener
+import com.spendmanager.app.ui.theme.*
 import com.spendmanager.app.ui.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,14 +36,28 @@ fun SettingsScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = White,
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = {
+                    Text(
+                        "Settings",
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Outlined.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Charcoal
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = White,
+                    titleContentColor = Charcoal
+                )
             )
         }
     ) { padding ->
@@ -44,143 +65,119 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .background(White)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Privacy Settings
-            ListItem(
-                headlineContent = { Text("Privacy Settings") },
-                supportingContent = { Text("Configure data collection preferences") },
-                leadingContent = {
-                    Icon(Icons.Default.Lock, contentDescription = null)
-                }
-            )
+            // Privacy Section
+            SettingsSection(title = "Privacy") {
+                SettingsToggleItem(
+                    icon = Icons.Outlined.Cloud,
+                    title = "Cloud AI Parsing",
+                    subtitle = if (uiState.consent.cloudAiEnabled)
+                        "Transactions are parsed by AI"
+                    else
+                        "Local storage only",
+                    checked = uiState.consent.cloudAiEnabled,
+                    onCheckedChange = { viewModel.setCloudAiEnabled(it) }
+                )
 
-            // Cloud AI Toggle
-            ListItem(
-                headlineContent = { Text("Cloud AI Parsing") },
-                supportingContent = {
-                    Text(
-                        if (uiState.consent.cloudAiEnabled)
-                            "Enabled - Transactions are parsed by AI"
-                        else
-                            "Disabled - Local storage only"
+                if (uiState.consent.cloudAiEnabled) {
+                    SettingsToggleItem(
+                        icon = Icons.Outlined.DataObject,
+                        title = "Upload Raw Messages",
+                        subtitle = "Send unredacted text for better accuracy",
+                        checked = uiState.consent.uploadRawEnabled,
+                        onCheckedChange = { viewModel.setUploadRawEnabled(it) }
                     )
-                },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.consent.cloudAiEnabled,
-                        onCheckedChange = { viewModel.setCloudAiEnabled(it) }
+
+                    SettingsToggleItem(
+                        icon = Icons.Outlined.Chat,
+                        title = "WhatsApp Summaries",
+                        subtitle = "Receive weekly spending summaries",
+                        checked = uiState.consent.whatsappEnabled,
+                        onCheckedChange = { viewModel.setWhatsappEnabled(it) }
                     )
                 }
-            )
+            }
 
-            if (uiState.consent.cloudAiEnabled) {
-                // Upload Raw Toggle
-                ListItem(
-                    headlineContent = { Text("Upload Raw Messages") },
-                    supportingContent = {
-                        Text("Send unredacted text for better accuracy")
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = uiState.consent.uploadRawEnabled,
-                            onCheckedChange = { viewModel.setUploadRawEnabled(it) }
-                        )
+            // Notifications Section
+            SettingsSection(title = "Notifications") {
+                SettingsClickableItem(
+                    icon = Icons.Outlined.Notifications,
+                    title = "Notification Access",
+                    subtitle = if (TransactionNotificationListener.isEnabled(context))
+                        "Enabled"
+                    else
+                        "Tap to enable",
+                    showBadge = !TransactionNotificationListener.isEnabled(context),
+                    onClick = {
+                        context.startActivity(TransactionNotificationListener.getSettingsIntent())
                     }
                 )
 
-                // WhatsApp Toggle
-                ListItem(
-                    headlineContent = { Text("WhatsApp Summaries") },
-                    supportingContent = {
-                        Text("Receive weekly spending summaries")
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = uiState.consent.whatsappEnabled,
-                            onCheckedChange = { viewModel.setWhatsappEnabled(it) }
-                        )
-                    }
+                SettingsClickableItem(
+                    icon = Icons.Outlined.Apps,
+                    title = "Notification Sources",
+                    subtitle = "Select apps to monitor",
+                    onClick = { /* TODO: Navigate to app selection */ }
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            // Data Section
+            SettingsSection(title = "Data") {
+                SettingsClickableItem(
+                    icon = Icons.Outlined.Download,
+                    title = "Export Data",
+                    subtitle = "Download your transaction data",
+                    onClick = { viewModel.exportData() }
+                )
 
-            // App Sources
-            ListItem(
-                headlineContent = { Text("Notification Sources") },
-                supportingContent = { Text("Select apps to monitor") },
-                leadingContent = {
-                    Icon(Icons.Default.Apps, contentDescription = null)
-                },
-                trailingContent = {
-                    Icon(Icons.Default.ChevronRight, contentDescription = null)
-                }
-            )
+                SettingsClickableItem(
+                    icon = Icons.Outlined.DeleteOutline,
+                    title = "Delete All Data",
+                    subtitle = "Remove all local and cloud data",
+                    isDestructive = true,
+                    onClick = { showDeleteDialog = true }
+                )
+            }
 
-            // Notification Listener
-            ListItem(
-                headlineContent = { Text("Notification Access") },
-                supportingContent = {
+            // Account Section
+            SettingsSection(title = "Account") {
+                SettingsClickableItem(
+                    icon = Icons.Outlined.Logout,
+                    title = "Logout",
+                    subtitle = "Sign out of your account",
+                    onClick = { showLogoutDialog = true }
+                )
+            }
+
+            // App Info
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = OffWhite
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
-                        if (TransactionNotificationListener.isEnabled(context))
-                            "Enabled"
-                        else
-                            "Disabled - Tap to enable"
+                        text = "Spend",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Charcoal
                     )
-                },
-                leadingContent = {
-                    Icon(Icons.Default.Notifications, contentDescription = null)
-                },
-                modifier = Modifier.clickable {
-                    context.startActivity(TransactionNotificationListener.getSettingsIntent())
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Data Management
-            ListItem(
-                headlineContent = { Text("Export Data") },
-                supportingContent = { Text("Download your transaction data") },
-                leadingContent = {
-                    Icon(Icons.Default.Download, contentDescription = null)
-                },
-                modifier = Modifier.clickable { viewModel.exportData() }
-            )
-
-            ListItem(
-                headlineContent = { Text("Delete All Data") },
-                supportingContent = { Text("Remove all local and cloud data") },
-                leadingContent = {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Version 1.0.0",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CharcoalMuted
                     )
-                },
-                modifier = Modifier.clickable { showDeleteDialog = true }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Account
-            ListItem(
-                headlineContent = { Text("Logout") },
-                leadingContent = {
-                    Icon(Icons.Default.Logout, contentDescription = null)
-                },
-                modifier = Modifier.clickable { showLogoutDialog = true }
-            )
-
-            // Version info
-            ListItem(
-                headlineContent = { Text("Version") },
-                supportingContent = { Text("1.0.0") },
-                leadingContent = {
-                    Icon(Icons.Default.Info, contentDescription = null)
                 }
-            )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
@@ -188,24 +185,46 @@ fun SettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete All Data?") },
+            containerColor = White,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Text(
+                    "Delete All Data?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Charcoal
+                )
+            },
             text = {
-                Text("This will permanently delete all your transaction data from this device and our servers. This action cannot be undone.")
+                Text(
+                    "This will permanently delete all your transaction data from this device and our servers. This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CharcoalMuted
+                )
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         viewModel.deleteAllData()
                         showDeleteDialog = false
                         onLogout()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentRed,
+                        contentColor = White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text("Delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text(
+                        "Cancel",
+                        color = CharcoalMuted
+                    )
                 }
             }
         )
@@ -215,24 +234,199 @@ fun SettingsScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Logout?") },
-            text = { Text("Your local data will be preserved.") },
+            containerColor = White,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Text(
+                    "Logout?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Charcoal
+                )
+            },
+            text = {
+                Text(
+                    "Your local data will be preserved.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CharcoalMuted
+                )
+            },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         showLogoutDialog = false
                         onLogout()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Charcoal,
+                        contentColor = White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Logout")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel")
+                TextButton(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text(
+                        "Cancel",
+                        color = CharcoalMuted
+                    )
                 }
             }
         )
     }
 }
 
+@Composable
+private fun SettingsSection(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            color = CharcoalMuted,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = White,
+            border = BorderStroke(1.dp, Gray200)
+        ) {
+            Column(
+                modifier = Modifier.padding(4.dp),
+                content = content
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsToggleItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(OffWhite),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Charcoal,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = Charcoal
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = CharcoalMuted
+            )
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = White,
+                checkedTrackColor = Charcoal,
+                uncheckedThumbColor = White,
+                uncheckedTrackColor = Gray300,
+                uncheckedBorderColor = Gray300
+            )
+        )
+    }
+}
+
+@Composable
+private fun SettingsClickableItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    isDestructive: Boolean = false,
+    showBadge: Boolean = false,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(if (isDestructive) AccentRedLight else OffWhite),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isDestructive) AccentRed else Charcoal,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (isDestructive) AccentRed else Charcoal
+                )
+                if (showBadge) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(AccentRed)
+                    )
+                }
+            }
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = CharcoalMuted
+            )
+        }
+
+        Icon(
+            imageVector = Icons.Outlined.ChevronRight,
+            contentDescription = null,
+            tint = Gray400,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
