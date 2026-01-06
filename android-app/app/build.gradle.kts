@@ -75,8 +75,7 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-            // IMPORTANT: Change this to your production API URL before release
-            buildConfigField("String", "API_BASE_URL", "\"https://api.spendmanager.app/v1\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://spendmanager-api-hvb1.onrender.com/v1\"")
         }
         debug {
             isMinifyEnabled = false
