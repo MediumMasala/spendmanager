@@ -45,8 +45,8 @@ android {
             useSupportLibrary = true
         }
 
-        // Build config fields
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/v1\"")
+        // Build config fields - Production URL for all builds
+        buildConfigField("String", "API_BASE_URL", "\"https://spendmanager-api-hvb1.onrender.com/v1\"")
     }
 
     // Product flavors for Play Store vs Sideload
@@ -79,7 +79,8 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/v1\"")
+            // Use production URL for debug builds too
+            buildConfigField("String", "API_BASE_URL", "\"https://spendmanager-api-hvb1.onrender.com/v1\"")
         }
     }
 
