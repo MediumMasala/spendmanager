@@ -37,9 +37,10 @@ const envSchema = z.object({
   WHATSAPP_ACCESS_TOKEN: z.string().optional(),
   WHATSAPP_VERIFY_TOKEN: z.string().optional(),
   WHATSAPP_TEMPLATE_WEEKLY_SUMMARY: z.string().default('weekly_money_summary'),
+  WHATSAPP_TEMPLATE_OTP: z.string().default('otp_verification'),
 
   // OTP
-  OTP_PROVIDER: z.enum(['console', 'twilio', 'msg91']).default('console'),
+  OTP_PROVIDER: z.enum(['console', 'whatsapp', 'twilio', 'msg91']).default('console'),
   OTP_TWILIO_SID: z.string().optional(),
   OTP_TWILIO_AUTH_TOKEN: z.string().optional(),
   OTP_TWILIO_FROM: z.string().optional(),

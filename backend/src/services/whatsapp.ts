@@ -36,15 +36,77 @@ export class WhatsAppService {
   private phoneNumberId: string;
   private accessToken: string;
   private templateName: string;
+  private otpTemplateName: string;
 
   constructor() {
     this.phoneNumberId = config.WHATSAPP_PHONE_NUMBER_ID ?? '';
     this.accessToken = config.WHATSAPP_ACCESS_TOKEN ?? '';
     this.templateName = config.WHATSAPP_TEMPLATE_WEEKLY_SUMMARY;
+    this.otpTemplateName = config.WHATSAPP_TEMPLATE_OTP ?? 'otp_verification';
   }
 
   private isConfigured(): boolean {
     return !!(this.phoneNumberId && this.accessToken);
+  }
+
+  /**
+   * Send OTP via WhatsApp.
+   *
+   * Template: otp_verification
+   * Variables:
+   * {{1}} - OTP code (e.g., "123456")
+   */
+  async sendOtp(
+    phoneNumber: string,
+    otp: string
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    if (!this.isConfigured()) {
+      if (isDev) {
+        console.log(`[WhatsApp OTP Dev] Would send to ${phoneNumber}: ${otp}`);
+        return { success: true, messageId: 'dev-mock-id' };
+      }
+      return { success: false, error: 'WhatsApp not configured' };
+    }
+
+    const payload: SendTemplateRequest = {
+      messaging_product: 'whatsapp',
+      to: phoneNumber.replace(/^\+/, ''), // Remove + prefix
+      type: 'template',
+      template: {
+        name: this.otpTemplateName,
+        language: { code: 'en' },
+        components: [
+          {
+            type: 'body',
+            parameters: [
+              { type: 'text', text: otp },
+            ],
+          },
+        ],
+      },
+    };
+
+    try {
+      const response = await axios.post<WhatsAppApiResponse>(
+        `${WHATSAPP_API_URL}/${this.phoneNumberId}/messages`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const messageId = response.data.messages[0]?.id;
+      console.log(`[WhatsApp OTP] Sent to ${phoneNumber}, messageId: ${messageId}`);
+
+      return { success: true, messageId };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[WhatsApp OTP] Failed to send to ${phoneNumber}:`, errorMessage);
+      return { success: false, error: errorMessage };
+    }
   }
 
   /**

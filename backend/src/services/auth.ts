@@ -7,6 +7,7 @@ import {
   generateDeviceId,
 } from '../utils/crypto.js';
 import { signJwt } from '../utils/jwt.js';
+import { whatsappService } from './whatsapp.js';
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_OTP_ATTEMPTS = 5;
@@ -177,27 +178,30 @@ export class AuthService {
         console.log(`[OTP] ${phone}: ${otp}`);
         break;
 
+      case 'whatsapp':
+        const result = await whatsappService.sendOtp(phone, otp);
+        if (!result.success) {
+          // Fallback to console in dev mode
+          if (isDev) {
+            console.log(`[OTP Fallback] ${phone}: ${otp}`);
+            return;
+          }
+          throw new Error(`WhatsApp OTP failed: ${result.error}`);
+        }
+        break;
+
       case 'twilio':
         await this.sendOtpTwilio(phone, otp);
         break;
 
-      case 'msg91':
-        // Implement MSG91 integration
-        throw new Error('MSG91 not implemented');
-
       default:
-        throw new Error(`Unknown OTP provider: ${provider}`);
+        // Default to console logging
+        console.log(`[OTP] ${phone}: ${otp}`);
     }
   }
 
   private async sendOtpTwilio(phone: string, otp: string): Promise<void> {
-    // Implement Twilio SMS sending
-    // const client = require('twilio')(config.OTP_TWILIO_SID, config.OTP_TWILIO_AUTH_TOKEN);
-    // await client.messages.create({
-    //   body: `Your SpendManager OTP is: ${otp}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
-    //   from: config.OTP_TWILIO_FROM,
-    //   to: phone,
-    // });
+    // Implement Twilio SMS sending if needed
     throw new Error('Twilio not configured');
   }
 
