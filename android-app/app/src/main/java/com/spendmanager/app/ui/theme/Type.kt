@@ -2,61 +2,55 @@ package com.spendmanager.app.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.spendmanager.app.R
 
-// Instrument Serif for headlines
-val InstrumentSerif = FontFamily(
-    Font(R.font.instrument_serif_regular, FontWeight.Normal),
-    Font(R.font.instrument_serif_italic, FontWeight.Normal, FontStyle.Italic)
-)
+// Use system Serif for headlines (elegant fallback)
+val SerifFont = FontFamily.Serif
 
 // App Typography
 val AppTypography = Typography(
-    // Display styles - Large headlines with Instrument Serif
+    // Display styles - Large headlines with Serif
     displayLarge = TextStyle(
-        fontFamily = InstrumentSerif,
+        fontFamily = SerifFont,
         fontWeight = FontWeight.Normal,
         fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = (-0.25).sp
     ),
     displayMedium = TextStyle(
-        fontFamily = InstrumentSerif,
+        fontFamily = SerifFont,
         fontWeight = FontWeight.Normal,
         fontSize = 45.sp,
         lineHeight = 52.sp,
         letterSpacing = 0.sp
     ),
     displaySmall = TextStyle(
-        fontFamily = InstrumentSerif,
+        fontFamily = SerifFont,
         fontWeight = FontWeight.Normal,
         fontSize = 36.sp,
         lineHeight = 44.sp,
         letterSpacing = 0.sp
     ),
 
-    // Headline styles - Section headers with Instrument Serif
+    // Headline styles - Section headers with Serif
     headlineLarge = TextStyle(
-        fontFamily = InstrumentSerif,
+        fontFamily = SerifFont,
         fontWeight = FontWeight.Normal,
         fontSize = 32.sp,
         lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(
-        fontFamily = InstrumentSerif,
+        fontFamily = SerifFont,
         fontWeight = FontWeight.Normal,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
     headlineSmall = TextStyle(
-        fontFamily = InstrumentSerif,
+        fontFamily = SerifFont,
         fontWeight = FontWeight.Normal,
         fontSize = 24.sp,
         lineHeight = 32.sp,

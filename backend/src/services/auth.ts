@@ -12,6 +12,10 @@ import { whatsappService } from './whatsapp.js';
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_OTP_ATTEMPTS = 5;
 
+// Test credentials for development/testing
+const TEST_PHONE = '8888888888';
+const TEST_OTP = '010101';
+
 interface OtpResult {
   success: boolean;
   message: string;
@@ -32,7 +36,39 @@ export class AuthService {
    * Request OTP for phone number.
    */
   async requestOtp(phone: string, countryCode: string = 'IN'): Promise<OtpResult> {
-    const phoneHash = hashPhone(phone);
+    // Normalize phone - remove +91 or 91 prefix
+    const normalizedPhone = phone.replace(/^\+?91/, '');
+
+    // Test number bypass - no OTP actually sent
+    if (normalizedPhone === TEST_PHONE) {
+      const phoneHash = hashPhone(normalizedPhone);
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
+
+      // Find existing user
+      const existingUser = await prisma.user.findUnique({
+        where: { phoneHash },
+      });
+
+      // Create OTP request with test OTP
+      await prisma.otpRequest.create({
+        data: {
+          userId: existingUser?.id,
+          phoneHash,
+          otpHash: hashOtp(TEST_OTP),
+          expiresAt,
+        },
+      });
+
+      console.log(`[TEST MODE] Phone: ${normalizedPhone}, OTP: ${TEST_OTP}`);
+      return {
+        success: true,
+        message: 'OTP sent successfully (TEST MODE)',
+        expiresAt,
+      };
+    }
+
+    const phoneHash = hashPhone(normalizedPhone);
     const otp = generateOtp();
     const otpHashed = hashOtp(otp);
 
@@ -55,7 +91,7 @@ export class AuthService {
     });
 
     // Send OTP
-    await this.sendOtp(phone, otp);
+    await this.sendOtp(normalizedPhone, otp);
 
     return {
       success: true,
@@ -76,7 +112,9 @@ export class AuthService {
       osVersion?: string;
     }
   ): Promise<VerifyResult> {
-    const phoneHash = hashPhone(phone);
+    // Normalize phone - remove +91 or 91 prefix
+    const normalizedPhone = phone.replace(/^\+?91/, '');
+    const phoneHash = hashPhone(normalizedPhone);
     const otpHashed = hashOtp(otp);
 
     // Find valid OTP request
