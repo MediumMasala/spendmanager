@@ -189,11 +189,13 @@ export class NotificationService {
           errors.push(`Token ${idx}: ${resp.error.message}`);
 
           // Track invalid tokens for cleanup
+          const token = tokens[idx];
           if (
-            resp.error.code === 'messaging/invalid-registration-token' ||
-            resp.error.code === 'messaging/registration-token-not-registered'
+            token &&
+            (resp.error.code === 'messaging/invalid-registration-token' ||
+              resp.error.code === 'messaging/registration-token-not-registered')
           ) {
-            invalidTokens.push(tokens[idx]);
+            invalidTokens.push(token);
           }
         }
       });
