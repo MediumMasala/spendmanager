@@ -213,6 +213,8 @@ class LoginViewModel @Inject constructor(
             AppSource("com.axis.mobile", "Axis Mobile", true, AppCategory.BANK),
             AppSource("com.kotak.mobile", "Kotak Mobile", true, AppCategory.BANK),
             AppSource("com.dreamplug.androidapp", "CRED", true, AppCategory.OTHER),
+            // Gmail for testing - remove in production
+            AppSource("com.google.android.gm", "Gmail (Testing)", true, AppCategory.OTHER),
         )
 
         database.appSourceDao().insertAll(defaultSources)

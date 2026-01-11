@@ -2,6 +2,8 @@ package com.spendmanager.app.service
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.spendmanager.app.data.local.AppDatabase
 import com.spendmanager.app.data.local.PreferencesManager
 import com.spendmanager.app.data.model.EventQueueItem
@@ -13,6 +15,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 /**
  * NotificationListenerService that captures transaction notifications.
@@ -51,10 +54,13 @@ class TransactionNotificationListener : NotificationListenerService() {
     private suspend fun processNotification(sbn: StatusBarNotification) {
         try {
             val packageName = sbn.packageName
+            android.util.Log.d(TAG, "Notification from: $packageName")
 
             // Check if this app is in our enabled list
             val enabledPackages = database.appSourceDao().getEnabledPackages()
+            android.util.Log.d(TAG, "Enabled packages: $enabledPackages")
             if (packageName !in enabledPackages) {
+                android.util.Log.d(TAG, "Package $packageName not in enabled list, skipping")
                 return
             }
 
@@ -66,15 +72,19 @@ class TransactionNotificationListener : NotificationListenerService() {
 
             // Use bigText if available, otherwise combine title + text
             val fullText = bigText ?: "$title $text".trim()
+            android.util.Log.d(TAG, "Notification text: $fullText")
 
             if (fullText.isBlank()) {
+                android.util.Log.d(TAG, "Empty notification, skipping")
                 return
             }
 
             // Check if this looks like a transaction
             if (!Redactor.isLikelyTransaction(fullText)) {
+                android.util.Log.d(TAG, "Not a transaction, skipping. Text: $fullText")
                 return
             }
+            android.util.Log.d(TAG, "Transaction detected! Processing...")
 
             // Get consent state
             val consent = preferences.consentFlow.first()
@@ -109,10 +119,28 @@ class TransactionNotificationListener : NotificationListenerService() {
 
             // Save to database
             database.eventQueueDao().insert(event)
+            android.util.Log.d(TAG, "Event saved! ID: ${event.eventId}, Text: ${event.textRedacted}")
+
+            // Trigger immediate sync if cloud mode is enabled
+            if (consent.cloudAiEnabled) {
+                triggerImmediateSync()
+            }
 
         } catch (e: Exception) {
             // Log error but don't crash the service
             android.util.Log.e(TAG, "Error processing notification", e)
+        }
+    }
+
+    private fun triggerImmediateSync() {
+        try {
+            val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+                .setInitialDelay(5, TimeUnit.SECONDS) // Small delay to batch multiple events
+                .build()
+            WorkManager.getInstance(applicationContext).enqueue(syncRequest)
+            android.util.Log.d(TAG, "Immediate sync triggered")
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to trigger sync", e)
         }
     }
 

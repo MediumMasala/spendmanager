@@ -273,6 +273,31 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
       });
     });
 
+    // Debug endpoint to check backend status
+    adminRoutes.get('/admin/debug', async (request, reply) => {
+      const userCount = await prisma.user.count();
+      const eventCount = await prisma.event.count();
+      const deviceCount = await prisma.device.count();
+
+      return reply.send({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: true,
+          users: userCount,
+          events: eventCount,
+          devices: deviceCount,
+        },
+        llm: {
+          openaiConfigured: !!config.OPENAI_API_KEY,
+          anthropicConfigured: !!config.ANTHROPIC_API_KEY,
+        },
+        env: {
+          nodeEnv: process.env.NODE_ENV,
+        },
+      });
+    });
+
     // Manually trigger parsing for pending events (debug)
     adminRoutes.post<{
       Body: { userId?: string; limit?: number };

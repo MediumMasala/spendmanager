@@ -34,16 +34,21 @@ class SyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        android.util.Log.d(TAG, "SyncWorker started")
         return try {
             // Check if user is logged in
             val token = preferences.authTokenFlow.first()
             if (token == null) {
+                android.util.Log.d(TAG, "User not logged in, skipping sync")
                 return Result.success() // Not logged in, nothing to sync
             }
+            android.util.Log.d(TAG, "User logged in, token present")
 
             // Check if cloud mode is enabled
             val consent = preferences.consentFlow.first()
+            android.util.Log.d(TAG, "Consent state: cloudAiEnabled=${consent.cloudAiEnabled}, uploadRawEnabled=${consent.uploadRawEnabled}")
             if (!consent.cloudAiEnabled) {
+                android.util.Log.d(TAG, "Cloud AI disabled, skipping sync")
                 return Result.success() // Cloud mode disabled, skip sync
             }
 
@@ -72,6 +77,7 @@ class SyncWorker @AssistedInject constructor(
 
     private suspend fun uploadPendingEvents() {
         val pendingEvents = database.eventQueueDao().getPendingEvents(limit = 50)
+        android.util.Log.d(TAG, "Found ${pendingEvents.size} pending events to upload")
         if (pendingEvents.isEmpty()) return
 
         // Mark as uploading
@@ -95,17 +101,24 @@ class SyncWorker @AssistedInject constructor(
                 }
             )
 
+            android.util.Log.d(TAG, "Uploading ${batch.events.size} events to backend...")
             val response = apiService.ingestEvents(batch)
+            android.util.Log.d(TAG, "Upload response: ${response.code()} - ${response.message()}")
+
             if (response.isSuccessful) {
+                val body = response.body()
+                android.util.Log.d(TAG, "Upload success! Accepted: ${body?.accepted}, Duplicates: ${body?.duplicates}, Errors: ${body?.errors}")
                 // Mark as uploaded
                 database.eventQueueDao().updateStatus(eventIds, UploadStatus.UPLOADED)
                 // Clean up uploaded events
                 database.eventQueueDao().deleteUploaded()
             } else {
+                android.util.Log.e(TAG, "Upload failed: ${response.code()} - ${response.errorBody()?.string()}")
                 // Mark as failed for retry
                 database.eventQueueDao().updateStatus(eventIds, UploadStatus.FAILED)
             }
         } catch (e: Exception) {
+            android.util.Log.e(TAG, "Upload exception: ${e.message}", e)
             // Mark as failed
             database.eventQueueDao().updateStatus(eventIds, UploadStatus.FAILED)
             throw e
