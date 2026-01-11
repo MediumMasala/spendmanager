@@ -8,6 +8,7 @@ import {
 } from '../utils/crypto.js';
 import { signJwt } from '../utils/jwt.js';
 import { whatsappService } from './whatsapp.js';
+import { firebaseService } from './firebase.js';
 
 const OTP_EXPIRY_MINUTES = 10;
 const MAX_OTP_ATTEMPTS = 5;
@@ -283,6 +284,78 @@ export class AuthService {
         },
       }),
     ]);
+  }
+
+  /**
+   * Verify Firebase ID token and authenticate user.
+   */
+  async verifyFirebaseToken(
+    firebaseToken: string,
+    deviceInfo?: {
+      platform?: string;
+      appVersion?: string;
+      osVersion?: string;
+    }
+  ): Promise<VerifyResult> {
+    // Verify the Firebase token
+    const firebaseResult = await firebaseService.verifyIdToken(firebaseToken);
+
+    if (!firebaseResult.success || !firebaseResult.phone) {
+      return {
+        success: false,
+        message: firebaseResult.error || 'Firebase authentication failed',
+      };
+    }
+
+    // Normalize phone number - Firebase returns E.164 format (+919876543210)
+    const normalizedPhone = firebaseResult.phone.replace(/^\+?91/, '');
+    const phoneHash = hashPhone(normalizedPhone);
+
+    // Find or create user
+    let user = await prisma.user.findUnique({
+      where: { phoneHash },
+    });
+
+    const isNewUser = !user;
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          phoneHash,
+          country: 'IN',
+          timezone: 'Asia/Kolkata',
+          consent: {
+            create: {
+              cloudAiEnabled: false,
+              uploadRawEnabled: false,
+              whatsappEnabled: false,
+            },
+          },
+        },
+      });
+    }
+
+    // Create device
+    const device = await prisma.device.create({
+      data: {
+        userId: user.id,
+        platform: deviceInfo?.platform ?? 'android',
+        appVersion: deviceInfo?.appVersion,
+        osVersion: deviceInfo?.osVersion,
+      },
+    });
+
+    // Generate JWT
+    const token = signJwt(user.id, device.id);
+
+    return {
+      success: true,
+      message: isNewUser ? 'Account created successfully' : 'Login successful',
+      token,
+      userId: user.id,
+      deviceId: device.id,
+      isNewUser,
+    };
   }
 }
 

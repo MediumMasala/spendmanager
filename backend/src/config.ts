@@ -51,6 +51,9 @@ const envSchema = z.object({
 
   // Logging
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+
+  // Firebase
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

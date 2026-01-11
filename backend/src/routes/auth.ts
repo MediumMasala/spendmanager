@@ -89,6 +89,60 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
     }
   );
 
+  // Firebase Auth - verify Firebase token and create session
+  fastify.post<{
+    Body: {
+      firebaseToken: string;
+      deviceInfo?: {
+        platform?: string;
+        appVersion?: string;
+        osVersion?: string;
+      };
+    };
+  }>(
+    '/auth/firebase',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['firebaseToken'],
+          properties: {
+            firebaseToken: { type: 'string' },
+            deviceInfo: {
+              type: 'object',
+              properties: {
+                platform: { type: 'string' },
+                appVersion: { type: 'string' },
+                osVersion: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { firebaseToken, deviceInfo } = request.body;
+
+      if (!firebaseToken) {
+        return reply.status(400).send({
+          success: false,
+          message: 'Firebase token is required',
+        });
+      }
+
+      const result = await authService.verifyFirebaseToken(
+        firebaseToken,
+        deviceInfo
+      );
+
+      if (!result.success) {
+        return reply.status(401).send(result);
+      }
+
+      return reply.send(result);
+    }
+  );
+
   // Protected routes
   fastify.register(async (protectedRoutes) => {
     protectedRoutes.addHook('onRequest', authMiddleware);
