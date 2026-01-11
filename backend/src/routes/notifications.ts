@@ -289,6 +289,20 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
             select: {
               id: true,
               whatsappE164: true,
+              consent: {
+                select: {
+                  cloudAiEnabled: true,
+                },
+              },
+            },
+          },
+          transaction: {
+            select: {
+              id: true,
+              amount: true,
+              direction: true,
+              merchant: true,
+              category: true,
             },
           },
         },
@@ -302,21 +316,38 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
           },
         },
       });
+      const parsedEvents = await prisma.event.count({
+        where: { parseStatus: 'PARSED' },
+      });
+      const pendingEvents = await prisma.event.count({
+        where: { parseStatus: 'PENDING' },
+      });
 
       return reply.send({
         events: events.map((e) => ({
           id: e.id,
           userId: e.userId,
           phone: e.user?.whatsappE164 || 'N/A',
+          cloudAiEnabled: e.user?.consent?.cloudAiEnabled || false,
           appSource: e.appSource,
           postedAt: e.postedAt.toISOString(),
           textRedacted: e.textRedacted,
           hasRawText: !!e.textRaw,
+          parseStatus: e.parseStatus,
+          parseError: e.parseError,
+          transaction: e.transaction ? {
+            amount: Number(e.transaction.amount),
+            direction: e.transaction.direction,
+            merchant: e.transaction.merchant,
+            category: e.transaction.category,
+          } : null,
           createdAt: e.createdAt.toISOString(),
         })),
         stats: {
           total: totalEvents,
           today: todayEvents,
+          parsed: parsedEvents,
+          pending: pendingEvents,
           returned: events.length,
         },
       });
