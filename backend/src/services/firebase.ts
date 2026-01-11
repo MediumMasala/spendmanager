@@ -17,18 +17,16 @@ function initializeFirebase(): admin.app.App {
       const serviceAccount = JSON.parse(firebaseCredentials);
       firebaseApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
+        projectId: serviceAccount.project_id,
       });
-      console.log('[Firebase] Initialized with service account credentials');
+      console.log('[Firebase] Initialized with service account credentials, project:', serviceAccount.project_id);
     } catch (error) {
       console.error('[Firebase] Failed to parse service account JSON:', error);
-      // Initialize without credentials for local development
-      firebaseApp = admin.initializeApp();
-      console.log('[Firebase] Initialized without explicit credentials');
+      throw new Error('Firebase service account configuration is invalid');
     }
   } else {
-    // Try default credentials (for local development with GOOGLE_APPLICATION_CREDENTIALS)
-    firebaseApp = admin.initializeApp();
-    console.log('[Firebase] Initialized with default credentials');
+    console.error('[Firebase] FIREBASE_SERVICE_ACCOUNT environment variable not set');
+    throw new Error('Firebase service account not configured');
   }
 
   return firebaseApp;
