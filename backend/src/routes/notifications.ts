@@ -3,6 +3,7 @@ import { prisma } from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { notificationService } from '../services/notifications.js';
 import { config } from '../config.js';
+import { eventService } from '../services/events.js';
 
 export async function notificationRoutes(fastify: FastifyInstance): Promise<void> {
   // Protected routes - require user auth
@@ -270,6 +271,68 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
           ? Math.round((permissionEnabled / totalDevices) * 100)
           : 0,
       });
+    });
+
+    // Manually trigger parsing for pending events (debug)
+    adminRoutes.post<{
+      Body: { userId?: string; limit?: number };
+    }>('/admin/events/parse', async (request, reply) => {
+      const { userId, limit = 10 } = request.body || {};
+
+      try {
+        // Check LLM config
+        const llmStatus = {
+          openaiConfigured: !!config.OPENAI_API_KEY,
+          anthropicConfigured: !!config.ANTHROPIC_API_KEY,
+        };
+
+        if (!llmStatus.openaiConfigured && !llmStatus.anthropicConfigured) {
+          return reply.send({
+            success: false,
+            error: 'No LLM provider configured (need OPENAI_API_KEY or ANTHROPIC_API_KEY)',
+            llmStatus,
+          });
+        }
+
+        // Get pending events
+        const pendingEvents = await prisma.event.findMany({
+          where: {
+            parseStatus: 'PENDING',
+            ...(userId ? { userId } : {}),
+          },
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const results = [];
+        for (const event of pendingEvents) {
+          try {
+            const parseResult = await eventService.parseEvent(event.id);
+            results.push({
+              eventId: event.id,
+              ...parseResult,
+            });
+          } catch (err: any) {
+            results.push({
+              eventId: event.id,
+              success: false,
+              error: err.message,
+            });
+          }
+        }
+
+        return reply.send({
+          success: true,
+          llmStatus,
+          pendingCount: pendingEvents.length,
+          results,
+        });
+      } catch (err: any) {
+        return reply.status(500).send({
+          success: false,
+          error: err.message,
+        });
+      }
     });
 
     // Get recent captured events (for admin dashboard)
