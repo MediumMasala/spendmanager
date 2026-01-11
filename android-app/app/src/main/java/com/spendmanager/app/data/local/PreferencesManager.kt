@@ -25,6 +25,9 @@ class PreferencesManager(private val context: Context) {
 
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val LAST_SYNC_TIME = longPreferencesKey("last_sync_time")
+
+        val FCM_TOKEN = stringPreferencesKey("fcm_token")
+        val FCM_TOKEN_SYNCED = booleanPreferencesKey("fcm_token_synced")
     }
 
     // Consent state
@@ -102,6 +105,28 @@ class PreferencesManager(private val context: Context) {
     // Check if logged in
     val isLoggedInFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
         prefs[Keys.AUTH_TOKEN] != null
+    }
+
+    // FCM Token
+    val fcmTokenFlow: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[Keys.FCM_TOKEN]
+    }
+
+    val fcmTokenSyncedFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[Keys.FCM_TOKEN_SYNCED] ?: false
+    }
+
+    suspend fun saveFcmToken(token: String) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.FCM_TOKEN] = token
+            prefs[Keys.FCM_TOKEN_SYNCED] = false // Mark as not synced
+        }
+    }
+
+    suspend fun markFcmTokenSynced() {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.FCM_TOKEN_SYNCED] = true
+        }
     }
 
     // Clear all preferences

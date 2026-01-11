@@ -22,6 +22,8 @@ val AccentRed = Color(0xFFC62828)     // Expense/Error
 val AccentRedLight = Color(0xFFFFEBEE)
 val AccentBlue = Color(0xFF1565C0)    // Links/Primary actions
 val AccentBlueLight = Color(0xFFE3F2FD)
+val WarningYellow = Color(0xFFF9A825)  // Warning/Caution
+val WarningYellowLight = Color(0xFFFFF8E1)
 
 // Neutral grays
 val Gray50 = Color(0xFFFAFAFA)

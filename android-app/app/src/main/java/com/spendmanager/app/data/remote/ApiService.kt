@@ -1,6 +1,7 @@
 package com.spendmanager.app.data.remote
 
 import com.spendmanager.app.data.model.*
+import com.spendmanager.app.data.model.FirebaseAuthRequest
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -12,6 +13,9 @@ interface ApiService {
 
     @POST("auth/verify-otp")
     suspend fun verifyOtp(@Body request: VerifyOtpRequest): Response<VerifyOtpResponse>
+
+    @POST("auth/firebase")
+    suspend fun verifyFirebaseToken(@Body request: FirebaseAuthRequest): Response<VerifyOtpResponse>
 
     // User
     @GET("user/me")
@@ -28,6 +32,9 @@ interface ApiService {
 
     @GET("user/export")
     suspend fun exportData(): Response<ExportResponse>
+
+    @PUT("user/fcm-token")
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<SuccessResponse>
 
     // Events
     @POST("events/ingest")

@@ -52,6 +52,15 @@
             </intent-filter>
         </service>
 
+        <!-- Firebase Cloud Messaging Service -->
+        <service
+            android:name=".service.SpendManagerMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- WorkManager initializer -->
         <provider
             android:name="androidx.startup.InitializationProvider"

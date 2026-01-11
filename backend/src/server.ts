@@ -11,6 +11,7 @@ import { connectRedis, disconnectRedis } from './redis.js';
 import { authRoutes } from './routes/auth.js';
 import { eventRoutes } from './routes/events.js';
 import { summaryRoutes } from './routes/summary.js';
+import { notificationRoutes } from './routes/notifications.js';
 import { startScheduler } from './scheduler.js';
 import { llmService, costGuard } from './llm/index.js';
 
@@ -90,6 +91,7 @@ fastify.get('/health/llm', async () => {
 await fastify.register(authRoutes, { prefix: '/v1' });
 await fastify.register(eventRoutes, { prefix: '/v1' });
 await fastify.register(summaryRoutes, { prefix: '/v1' });
+await fastify.register(notificationRoutes, { prefix: '/v1' });
 
 // WhatsApp webhook (public)
 fastify.get<{

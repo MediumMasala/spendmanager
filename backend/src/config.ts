@@ -54,6 +54,9 @@ const envSchema = z.object({
 
   // Firebase
   FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+
+  // Admin
+  ADMIN_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

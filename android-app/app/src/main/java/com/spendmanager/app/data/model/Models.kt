@@ -225,3 +225,15 @@ data class CategoryTotal(
     val total: Double,
     val count: Int
 )
+
+// Firebase Auth
+data class FirebaseAuthRequest(
+    val firebaseToken: String,
+    val deviceInfo: DeviceInfoRequest?
+)
+
+// FCM Token
+data class FcmTokenRequest(
+    val fcmToken: String,
+    val deviceId: String?
+)
