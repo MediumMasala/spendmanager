@@ -29,7 +29,10 @@ const fastify = Fastify({
 
 // Plugins
 await fastify.register(cors, {
-  origin: isDev ? true : ['https://spendmanager.app'],
+  origin: isDev ? true : [
+    'https://spendmanager.app',
+    /\.vercel\.app$/,  // Allow all Vercel preview/production URLs
+  ],
   credentials: true,
 });
 
