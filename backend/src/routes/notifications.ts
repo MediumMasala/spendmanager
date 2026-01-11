@@ -249,22 +249,107 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
       }
     );
 
-    // Get all users with FCM tokens (for admin dashboard)
-    adminRoutes.get('/admin/notifications/users', async (request, reply) => {
-      const users = await prisma.user.findMany({
-        where: {
-          devices: {
-            some: {
-              deviceToken: { not: null },
+    // Get notification permission stats
+    adminRoutes.get('/admin/notifications/stats', async (request, reply) => {
+      const totalDevices = await prisma.device.count();
+      const permissionEnabled = await prisma.device.count({
+        where: { notificationPermission: true },
+      });
+      const withFcmToken = await prisma.device.count({
+        where: { deviceToken: { not: null } },
+      });
+      const totalUsers = await prisma.user.count();
+
+      return reply.send({
+        totalUsers,
+        totalDevices,
+        permissionEnabled,
+        permissionDisabled: totalDevices - permissionEnabled,
+        withFcmToken,
+        permissionRate: totalDevices > 0
+          ? Math.round((permissionEnabled / totalDevices) * 100)
+          : 0,
+      });
+    });
+
+    // Get recent captured events (for admin dashboard)
+    // Query params: ?limit=50&userId=optional
+    adminRoutes.get<{
+      Querystring: { limit?: string; userId?: string };
+    }>('/admin/events', async (request, reply) => {
+      const limit = Math.min(parseInt(request.query.limit || '50'), 200);
+      const userId = request.query.userId;
+
+      const events = await prisma.event.findMany({
+        where: userId ? { userId } : undefined,
+        orderBy: { postedAt: 'desc' },
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              whatsappE164: true,
             },
           },
+        },
+      });
+
+      const totalEvents = await prisma.event.count();
+      const todayEvents = await prisma.event.count({
+        where: {
+          postedAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          },
+        },
+      });
+
+      return reply.send({
+        events: events.map((e) => ({
+          id: e.id,
+          userId: e.userId,
+          phone: e.user?.whatsappE164 || 'N/A',
+          appSource: e.appSource,
+          postedAt: e.postedAt.toISOString(),
+          textRedacted: e.textRedacted,
+          hasRawText: !!e.textRaw,
+          createdAt: e.createdAt.toISOString(),
+        })),
+        stats: {
+          total: totalEvents,
+          today: todayEvents,
+          returned: events.length,
+        },
+      });
+    });
+
+    // Get all users with FCM tokens (for admin dashboard)
+    // Query params: ?filter=all|permission_enabled|permission_disabled
+    adminRoutes.get<{
+      Querystring: { filter?: string };
+    }>('/admin/notifications/users', async (request, reply) => {
+      const filter = request.query.filter || 'all';
+
+      let deviceWhere: any = { deviceToken: { not: null } };
+      let userDeviceWhere: any = { some: { deviceToken: { not: null } } };
+
+      if (filter === 'permission_enabled') {
+        deviceWhere = { deviceToken: { not: null }, notificationPermission: true };
+        userDeviceWhere = { some: { deviceToken: { not: null }, notificationPermission: true } };
+      } else if (filter === 'permission_disabled') {
+        deviceWhere = { deviceToken: { not: null }, notificationPermission: false };
+        userDeviceWhere = { some: { deviceToken: { not: null }, notificationPermission: false } };
+      }
+
+      const users = await prisma.user.findMany({
+        where: {
+          devices: userDeviceWhere,
         },
         select: {
           id: true,
           createdAt: true,
           whatsappE164: true,
           devices: {
-            where: { deviceToken: { not: null } },
+            where: deviceWhere,
             select: {
               id: true,
               platform: true,
