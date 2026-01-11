@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpendManager - Admin Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: #0f0f23;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .sidebar-header h2 {
+            color: #00d09c;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .sidebar-header button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #16213e;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .sidebar-header button:hover {
+            background: #1a2a4e;
+        }
+        .users-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .user-card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .user-card:hover {
+            background: #1a2a4e;
+        }
+        .user-card.selected {
+            border-color: #00d09c;
+        }
+        .user-card .phone {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .user-card .uuid {
+            font-family: monospace;
+            font-size: 10px;
+            color: #666;
+            word-break: break-all;
+        }
+        .user-card .meta {
+            font-size: 11px;
+            color: #888;
+            margin-top: 6px;
+        }
+        .user-count {
+            padding: 10px 20px;
+            background: #16213e;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid #333;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 300px;
+            padding: 20px;
+            max-width: 700px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #00d09c;
+            font-size: 24px;
+        }
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #00d09c;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #0f0f23;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #00d09c;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #00d09c;
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #00b386;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+        .result.success {
+            background: #0d3320;
+            border: 1px solid #00d09c;
+            display: block;
+        }
+        .result.error {
+            background: #331111;
+            border: 1px solid #ff4444;
+            display: block;
+        }
+        .config-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .config-row .field {
+            flex: 1;
+        }
+        .config-row button {
+            margin-bottom: 15px;
+        }
+        .selected-user {
+            background: #0d3320;
+            border: 1px solid #00d09c;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .selected-user.show {
+            display: block;
+        }
+        .selected-user .label {
+            font-size: 11px;
+            color: #00d09c;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .selected-user .value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #16213e;
+            border: none;
+            border-radius: 8px;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .tab.active {
+            background: #00d09c;
+            color: #000;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        .empty-state p {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Users</h2>
+            <button onclick="loadUsers()">Refresh</button>
+        </div>
+        <div class="users-list" id="usersList">
+            <div class="empty-state">
+                <p>Configure API key and click Refresh</p>
+            </div>
+        </div>
+        <div class="user-count" id="userCount">0 users</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h1>SpendManager Admin</h1>
+
+        <!-- Config Card -->
+        <div class="card">
+            <h2>Configuration</h2>
+            <div class="config-row">
+                <div class="field">
+                    <label>Admin API Key</label>
+                    <input type="password" id="apiKey" placeholder="Your admin API key">
+                </div>
+                <button onclick="saveConfig()">Save</button>
+            </div>
+            <div id="configStatus" class="result"></div>
+        </div>
+
+        <!-- Selected User -->
+        <div class="selected-user" id="selectedUser">
+            <div class="label">Selected User</div>
+            <div class="value" id="selectedUserInfo">-</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('single')">Send Notification</button>
+            <button class="tab" onclick="showTab('broadcast')">Broadcast All</button>
+        </div>
+
+        <!-- Single User Tab -->
+        <div id="single" class="tab-content active">
+            <div class="card">
+                <h2>Send to Selected User</h2>
+
+                <input type="hidden" id="userId">
+
+                <label>Notification Type</label>
+                <select id="notifType" onchange="toggleCustomFields()">
+                    <option value="custom">Custom Message</option>
+                    <option value="permission">Permission Reminder</option>
+                    <option value="summary">Weekly Summary Alert</option>
+                </select>
+
+                <div id="customFields">
+                    <label>Title</label>
+                    <input type="text" id="singleTitle" placeholder="Notification title">
+
+                    <label>Message</label>
+                    <textarea id="singleBody" placeholder="Notification message"></textarea>
+                </div>
+
+                <button onclick="sendToUser()" style="width: 100%;">Send Notification</button>
+                <div id="singleResult" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Broadcast Tab -->
+        <div id="broadcast" class="tab-content">
+            <div class="card">
+                <h2>Broadcast to All Users</h2>
+                <label>Title</label>
+                <input type="text" id="broadcastTitle" placeholder="Notification title">
+
+                <label>Message</label>
+                <textarea id="broadcastBody" placeholder="Notification message"></textarea>
+
+                <button onclick="sendBroadcast()" style="width: 100%;">Send to All Users</button>
+                <div id="broadcastResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://spendmanager-api-hvb1.onrender.com';
+
+        // Load saved config
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedKey = localStorage.getItem('sm_api_key');
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+                loadUsers();
+            }
+        });
+
+        function saveConfig() {
+            const key = document.getElementById('apiKey').value;
+            localStorage.setItem('sm_api_key', key);
+            showResult('configStatus', true, 'Saved! Loading users...');
+            loadUsers();
+        }
+
+        function getApiKey() {
+            return document.getElementById('apiKey').value;
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function showResult(elementId, success, message) {
+            const el = document.getElementById(elementId);
+            el.className = 'result ' + (success ? 'success' : 'error');
+            el.textContent = message;
+        }
+
+        function toggleCustomFields() {
+            const type = document.getElementById('notifType').value;
+            document.getElementById('customFields').style.display =
+                type === 'custom' ? 'block' : 'none';
+        }
+
+        async function loadUsers() {
+            const listEl = document.getElementById('usersList');
+            const countEl = document.getElementById('userCount');
+
+            try {
+                const res = await fetch(`${API_URL}/v1/admin/notifications/users`, {
+                    headers: { 'X-Admin-API-Key': getApiKey() }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    countEl.textContent = `${data.totalUsers} user${data.totalUsers !== 1 ? 's' : ''}`;
+
+                    if (data.users.length === 0) {
+                        listEl.innerHTML = '<div class="empty-state"><p>No users with FCM tokens yet</p></div>';
+                        return;
+                    }
+
+                    listEl.innerHTML = data.users.map(user => `
+                        <div class="user-card" onclick="selectUser('${user.id}', '${user.phone}')" id="user-${user.id}">
+                            <div class="phone">${user.phone}</div>
+                            <div class="uuid">${user.id}</div>
+                            <div class="meta">${user.deviceCount} device(s) - ${formatDate(user.createdAt)}</div>
+                        </div>
+                    `).join('');
+
+                    showResult('configStatus', true, 'Connected!');
+                    setTimeout(() => {
+                        document.getElementById('configStatus').className = 'result';
+                    }, 2000);
+                } else {
+                    listEl.innerHTML = `<div class="empty-state"><p>${data.error || 'Failed to load'}</p></div>`;
+                    countEl.textContent = '0 users';
+                    showResult('configStatus', false, data.error || 'Failed to connect');
+                }
+            } catch (err) {
+                listEl.innerHTML = `<div class="empty-state"><p>Network error</p></div>`;
+                countEl.textContent = '0 users';
+                showResult('configStatus', false, 'Network error: ' + err.message);
+            }
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        }
+
+        function selectUser(userId, phone) {
+            // Update selection UI
+            document.querySelectorAll('.user-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById(`user-${userId}`).classList.add('selected');
+
+            // Update form
+            document.getElementById('userId').value = userId;
+            document.getElementById('selectedUser').classList.add('show');
+            document.getElementById('selectedUserInfo').textContent = `${phone} (${userId.slice(0, 8)}...)`;
+
+            // Switch to single tab
+            showTab('single');
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            document.querySelectorAll('.tab')[1].classList.remove('active');
+        }
+
+        async function sendToUser() {
+            const userId = document.getElementById('userId').value;
+            const type = document.getElementById('notifType').value;
+            const title = document.getElementById('singleTitle').value;
+            const body = document.getElementById('singleBody').value;
+
+            if (!userId) {
+                showResult('singleResult', false, 'Please select a user from the sidebar');
+                return;
+            }
+
+            try {
+                let endpoint, payload;
+
+                if (type === 'permission') {
+                    endpoint = '/v1/admin/notifications/permission-reminder';
+                    payload = { userId };
+                } else if (type === 'summary') {
+                    endpoint = '/v1/admin/notifications/send-to-user';
+                    payload = {
+                        userId,
+                        title: 'Weekly Summary Ready',
+                        body: 'Your weekly spending summary is ready. Tap to view.',
+                        data: { type: 'weekly_summary', navigate_to: 'summary' }
+                    };
+                } else {
+                    if (!title || !body) {
+                        showResult('singleResult', false, 'Please fill in title and message');
+                        return;
+                    }
+                    endpoint = '/v1/admin/notifications/send-to-user';
+                    payload = { userId, title, body };
+                }
+
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-API-Key': getApiKey()
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showResult('singleResult', true, `Sent! Success: ${data.successCount}, Failed: ${data.failureCount}`);
+                } else {
+                    showResult('singleResult', false, data.error || data.errors?.[0] || 'Failed to send');
+                }
+            } catch (err) {
+                showResult('singleResult', false, 'Network error: ' + err.message);
+            }
+        }
+
+        async function sendBroadcast() {
+            const title = document.getElementById('broadcastTitle').value;
+            const body = document.getElementById('broadcastBody').value;
+
+            if (!title || !body) {
+                showResult('broadcastResult', false, 'Please fill in title and message');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/v1/admin/notifications/broadcast`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-API-Key': getApiKey()
+                    },
+                    body: JSON.stringify({ title, body })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showResult('broadcastResult', true, `Sent! Success: ${data.successCount}, Failed: ${data.failureCount}`);
+                } else {
+                    showResult('broadcastResult', false, data.error || 'Failed to send');
+                }
+            } catch (err) {
+                showResult('broadcastResult', false, 'Network error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

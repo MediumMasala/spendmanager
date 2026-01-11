@@ -199,6 +199,7 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
         select: {
           id: true,
           createdAt: true,
+          whatsappE164: true,
           devices: {
             where: { deviceToken: { not: null } },
             select: {
@@ -213,6 +214,7 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
       return reply.send({
         users: users.map((u) => ({
           id: u.id,
+          phone: u.whatsappE164 || 'N/A',
           createdAt: u.createdAt.toISOString(),
           deviceCount: u.devices.length,
           devices: u.devices.map((d) => ({
