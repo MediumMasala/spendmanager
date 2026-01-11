@@ -217,7 +217,7 @@ export class AuthService {
         console.log(`[OTP] ${phone}: ${otp}`);
         break;
 
-      case 'whatsapp':
+      case 'whatsapp': {
         const result = await whatsappService.sendOtp(phone, otp);
         if (!result.success) {
           // Fallback to console in dev mode
@@ -228,6 +228,7 @@ export class AuthService {
           throw new Error(`WhatsApp OTP failed: ${result.error}`);
         }
         break;
+      }
 
       case 'twilio':
         await this.sendOtpTwilio(phone, otp);
