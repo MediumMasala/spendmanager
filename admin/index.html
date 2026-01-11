@@ -393,9 +393,9 @@
 
                     listEl.innerHTML = data.users.map(user => `
                         <div class="user-card" onclick="selectUser('${user.id}', '${user.phone}')" id="user-${user.id}">
-                            <div class="phone">${user.phone}</div>
+                            <div class="phone">${user.phone} ${user.notificationEnabled ? '<span style="color:#00d09c">●</span>' : '<span style="color:#ff4444">●</span>'}</div>
                             <div class="uuid">${user.id}</div>
-                            <div class="meta">${user.deviceCount} device(s) - ${formatDate(user.createdAt)}</div>
+                            <div class="meta">${user.deviceCount} device(s) - ${formatDate(user.createdAt)} - ${user.notificationEnabled ? 'Notif ON' : 'Notif OFF'}</div>
                         </div>
                     `).join('');
 

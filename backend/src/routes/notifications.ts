@@ -9,6 +9,69 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
   fastify.register(async (protectedRoutes) => {
     protectedRoutes.addHook('onRequest', authMiddleware);
 
+    // Update permission status for current device
+    protectedRoutes.put<{
+      Body: {
+        notificationPermission: boolean;
+        deviceId?: string;
+      };
+    }>(
+      '/user/permission-status',
+      {
+        schema: {
+          body: {
+            type: 'object',
+            required: ['notificationPermission'],
+            properties: {
+              notificationPermission: { type: 'boolean' },
+              deviceId: { type: 'string' },
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        const { notificationPermission, deviceId } = request.body;
+        const userId = request.userId!;
+
+        try {
+          if (deviceId) {
+            await prisma.device.updateMany({
+              where: { id: deviceId, userId },
+              data: {
+                notificationPermission,
+                permissionUpdatedAt: new Date(),
+                lastSeenAt: new Date(),
+              },
+            });
+          } else {
+            const device = await prisma.device.findFirst({
+              where: { userId },
+              orderBy: { lastSeenAt: 'desc' },
+            });
+
+            if (device) {
+              await prisma.device.update({
+                where: { id: device.id },
+                data: {
+                  notificationPermission,
+                  permissionUpdatedAt: new Date(),
+                  lastSeenAt: new Date(),
+                },
+              });
+            }
+          }
+
+          return reply.send({ success: true });
+        } catch (error: any) {
+          console.error('[Permission] Failed to update status:', error);
+          return reply.status(500).send({
+            success: false,
+            error: 'Failed to update permission status',
+          });
+        }
+      }
+    );
+
     // Update FCM token for current device
     protectedRoutes.put<{
       Body: {
@@ -206,6 +269,8 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
               id: true,
               platform: true,
               lastSeenAt: true,
+              notificationPermission: true,
+              permissionUpdatedAt: true,
             },
           },
         },
@@ -217,10 +282,13 @@ export async function notificationRoutes(fastify: FastifyInstance): Promise<void
           phone: u.whatsappE164 || 'N/A',
           createdAt: u.createdAt.toISOString(),
           deviceCount: u.devices.length,
+          notificationEnabled: u.devices.some(d => d.notificationPermission),
           devices: u.devices.map((d) => ({
             id: d.id,
             platform: d.platform,
             lastSeenAt: d.lastSeenAt.toISOString(),
+            notificationPermission: d.notificationPermission,
+            permissionUpdatedAt: d.permissionUpdatedAt?.toISOString() || null,
           })),
         })),
         totalUsers: users.length,

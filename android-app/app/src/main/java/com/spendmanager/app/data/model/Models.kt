@@ -237,3 +237,9 @@ data class FcmTokenRequest(
     val fcmToken: String,
     val deviceId: String?
 )
+
+// Permission Status
+data class PermissionStatusRequest(
+    val notificationPermission: Boolean,
+    val deviceId: String?
+)

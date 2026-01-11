@@ -36,6 +36,9 @@ interface ApiService {
     @PUT("user/fcm-token")
     suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<SuccessResponse>
 
+    @PUT("user/permission-status")
+    suspend fun updatePermissionStatus(@Body request: PermissionStatusRequest): Response<SuccessResponse>
+
     // Events
     @POST("events/ingest")
     suspend fun ingestEvents(@Body batch: EventBatch): Response<IngestResponse>

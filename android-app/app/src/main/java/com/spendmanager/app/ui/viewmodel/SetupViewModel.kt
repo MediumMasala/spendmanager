@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.spendmanager.app.data.local.PreferencesManager
 import com.spendmanager.app.data.model.ConsentState
 import com.spendmanager.app.data.model.ConsentUpdateRequest
+import com.spendmanager.app.data.model.PermissionStatusRequest
 import com.spendmanager.app.data.remote.ApiService
 import com.spendmanager.app.service.TransactionNotificationListener
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,6 +44,26 @@ class SetupViewModel @Inject constructor(
     fun checkNotificationListener() {
         val enabled = TransactionNotificationListener.isEnabled(getApplication())
         _uiState.value = _uiState.value.copy(notificationListenerEnabled = enabled)
+
+        // Always sync permission status to backend
+        syncPermissionStatus(enabled)
+    }
+
+    private fun syncPermissionStatus(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                val deviceId = preferences.deviceIdFlow.first()
+                apiService.updatePermissionStatus(
+                    PermissionStatusRequest(
+                        notificationPermission = enabled,
+                        deviceId = deviceId
+                    )
+                )
+                android.util.Log.d("SetupViewModel", "Permission status synced: $enabled")
+            } catch (e: Exception) {
+                android.util.Log.e("SetupViewModel", "Failed to sync permission status", e)
+            }
+        }
     }
 
     fun setLocalOnlyMode(localOnly: Boolean) {
